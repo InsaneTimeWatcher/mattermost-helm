@@ -8,12 +8,19 @@ spec:
   selector:
     matchLabels:
       {{- include "mattermost-rtcd.selectorLabels" . | nindent 6 }}
+  {{- if eq .Values.deploymentType "Deployment" }}
+  strategy:
+  {{- else }}
   updateStrategy:
+  {{- end }}
     {{- if eq .Values.Configuration.updateStrategy "RollingUpdate" }}
     rollingUpdate:
       maxUnavailable: {{ .Values.Configuration.maxUnavailable }}
     {{- end }}
     type: {{ .Values.Configuration.updateStrategy }}
+  {{- if eq .Values.deploymentType "Deployment" }}
+  replicas: {{ .Values.Configuration.replicas | default 1 }}
+  {{- end }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -23,9 +30,6 @@ spec:
       labels:
         {{- include "mattermost-rtcd.selectorLabels" . | nindent 8 }}
     spec:
-      {{- if eq .Values.deploymentType "Deployment" }}
-      replicas: {{ .Values.Configuration.replicas | default 1 }}
-      {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
